@@ -1,0 +1,15 @@
+{
+  "name": "two-tier-ecom-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple two-tier e-commerce web application",
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "server": "npm --prefix backend start",
+    "client": "npm --prefix frontend dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

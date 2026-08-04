@@ -1,0 +1,20 @@
+# Dependency directories (Ignores node_modules in root, frontend, backend, etc.)
+node_modules/
+**/node_modules/
+
+# Production build folders
+dist/
+**/dist/
+build/
+**/build/
+
+# Environment variable files
+.env
+.env.local
+*.env
+
+# System & log files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
