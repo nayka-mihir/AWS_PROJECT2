@@ -1,20 +1,12 @@
-version: '3.8'
-
 services:
-  backend:
-    build: ./backend
-    container_name: ecom_backend
+  # Single container: Express serves both API + React frontend on port 5000
+  app:
+    build: .
+    container_name: ecom_app
     ports:
       - "5000:5000"
     volumes:
-      - ./backend/data:/app/data
-    restart: always
-
-  frontend:
-    build: ./frontend
-    container_name: ecom_frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+      - ./backend/data:/app/data    # Persist db.json data across container restarts
+    environment:
+      - NODE_ENV=production
     restart: always
