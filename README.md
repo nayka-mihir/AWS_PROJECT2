@@ -67,28 +67,7 @@ npm run dev
 
 ## 🐳 Docker Deployment Options
 
-```mermaid
-flowchart LR
-    A[Source Code] --> B{Choose Deployment Mode}
-    B -->|Option A| C["Docker Compose<br/>Multi-Container"]
-    B -->|Option B| D["Multi-Stage Build<br/>Single Container"]
-
-    C --> C1["Frontend :3000"]
-    C --> C2["Backend :5000"]
-
-    D --> D1["Unified App :5000<br/>(Frontend + Backend)"]
-```
-
-### Option A — Multi-Container Setup (Docker Compose)
-```bash
-docker compose up --build -d
-```
-- **Frontend App:** `http://localhost:3000`
-- **Backend API:** `http://localhost:5000`
-- **Logs:** `docker compose logs -f`
-- **Stop:** `docker compose down`
-
-### Option B — Single-Container / Single-Port Setup (Production)
+### Option A — Single-Container / Single-Port Setup (Production)
 ```bash
 # 1. Build the unified Docker image
 docker build -t ecom-app:latest .
@@ -98,25 +77,66 @@ docker run -d -p 5000:5000 --name ecom_app ecom-app:latest
 ```
 Access the website at: `http://localhost:5000`
 
+### Option B — Docker Compose
+```bash
+docker compose up --build -d
+```
+- **Full App:** `http://localhost:5000`
+- **Logs:** `docker compose logs -f`
+- **Stop:** `docker compose down`
+
 ---
 
-## 📦 Docker Hub Publishing Guide
+## 📦 Docker Hub — Pull & Run (For Other Users)
 
-### 1. Separate Repositories (Recommended)
+The pre-built image is available on Docker Hub: `mihirnayka/two-tier-ecom-app:latest`
+
+### Quick Start with `docker run`
 ```bash
-docker login
+# ⚠️ The -p 5000:5000 flag is REQUIRED — without it the website won't be accessible!
+docker run -d -p 5000:5000 --name ecom_app mihirnayka/two-tier-ecom-app:latest
+```
+Then open: `http://localhost:5000`
 
-docker build -t YOUR_DOCKERHUB_USERNAME/ecom-backend:latest ./backend
-docker build -t YOUR_DOCKERHUB_USERNAME/ecom-frontend:latest ./frontend
+### Quick Start with `docker compose`
 
-docker push YOUR_DOCKERHUB_USERNAME/ecom-backend:latest
-docker push YOUR_DOCKERHUB_USERNAME/ecom-frontend:latest
+Create a `docker-compose.yml` file with this content:
+```yaml
+services:
+  app:
+    image: mihirnayka/two-tier-ecom-app:latest
+    container_name: ecom_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ecom_data:/app/backend/data
+    environment:
+      - NODE_ENV=production
+    restart: always
+
+volumes:
+  ecom_data:
+    driver: local
+```
+Then run:
+```bash
+docker compose up -d
 ```
 
-### 2. Single Unified Repository
+### 🔧 Troubleshooting
+
+| Problem | Cause | Fix |
+|---|---|---|
+| Website not opening | Port not mapped | Use `-p 5000:5000` in `docker run` |
+| `docker-compose` command not found | Docker Compose V1 is deprecated | Use `docker compose` (with space, no hyphen) |
+| Container exits immediately | Check logs for errors | Run `docker logs ecom_app` |
+| Permission denied on data dir | Linux file permissions | Run `docker run` with `--user $(id -u):$(id -g)` |
+
+### Publishing to Docker Hub
 ```bash
-docker build -t YOUR_DOCKERHUB_USERNAME/two-tier-ecom-app:latest .
-docker push YOUR_DOCKERHUB_USERNAME/two-tier-ecom-app:latest
+docker login
+docker build -t mihirnayka/two-tier-ecom-app:latest .
+docker push mihirnayka/two-tier-ecom-app:latest
 ```
 
 ---
@@ -131,7 +151,7 @@ flowchart TD
 
     P1 -.-> P1a["Ubuntu 22.04 LTS, t2.micro<br/>Configure Security Group"]
     P2 -.-> P2a["SSH in, apt update/upgrade<br/>install docker.io + compose"]
-    P3 -.-> P3a["git clone + docker compose up<br/>-or- docker run from Docker Hub"]
+    P3 -.-> P3a["docker run from Docker Hub<br/>-or- git clone + docker compose"]
     P4 -.-> P4a["Check frontend, backend health,<br/>and products API in browser"]
 ```
 
@@ -146,8 +166,7 @@ flowchart TD
 | Type | Protocol | Port Range | Source | Purpose |
 |---|---|---|---|---|
 | SSH | TCP | `22` | My IP / Anywhere (`0.0.0.0/0`) | Remote Terminal Access |
-| Custom TCP | TCP | `3000` | Anywhere (`0.0.0.0/0`) | Frontend Web App |
-| Custom TCP | TCP | `5000` | Anywhere (`0.0.0.0/0`) | Backend API |
+| Custom TCP | TCP | `5000` | Anywhere (`0.0.0.0/0`) | Full App (Frontend + API) |
 
 ### Phase 2: Connect & Install Docker on EC2
 ```bash
@@ -166,23 +185,23 @@ exit
 
 ### Phase 3: Deploy Application on EC2
 
-**Method 1 — Git & Docker Compose**
+**Method 1 — Docker Hub Image (Recommended)**
+```bash
+docker run -d -p 5000:5000 --name ecom_app mihirnayka/two-tier-ecom-app:latest
+```
+
+**Method 2 — Git & Docker Compose**
 ```bash
 git clone https://github.com/YOUR_USERNAME/AWS_PROJECT2.git app
 cd app
-docker compose up --build -d
-```
-
-**Method 2 — Docker Hub Image**
-```bash
-docker run -d -p 5000:5000 --name ecom_app YOUR_DOCKERHUB_USERNAME/two-tier-ecom-app:latest
+docker compose up -d
 ```
 
 ### Phase 4: Verification & Live Endpoints
 | Endpoint | URL |
 |---|---|
-| 🌐 Frontend Application | `http://<YOUR_EC2_PUBLIC_IP>:3000` |
-| 🔌 Backend Health Check | `http://<YOUR_EC2_PUBLIC_IP>:5000/api/health` |
+| 🌐 Full Application | `http://<YOUR_EC2_PUBLIC_IP>:5000` |
+| 🔌 Health Check API | `http://<YOUR_EC2_PUBLIC_IP>:5000/api/health` |
 | 📦 Products API | `http://<YOUR_EC2_PUBLIC_IP>:5000/api/products` |
 
 ---
@@ -204,3 +223,4 @@ docker run -d -p 5000:5000 --name ecom_app YOUR_DOCKERHUB_USERNAME/two-tier-ecom
 ## 📜 License
 
 This project is open-source and available under the [MIT License](LICENSE).
+
