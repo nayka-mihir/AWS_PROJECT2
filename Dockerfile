@@ -1,15 +1,15 @@
 # frontend part
-FROM node:18-alpine as frontend-builder
+FROM node:18-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 COPY frontend/package*.json ./
 RUN npm ci
 
 copy frontend/ ./
-RUN npm run builder
+RUN npm run build
 
 # backend part
-FROM node:18-alpine as final 
+FROM node:18-alpine AS final 
 WORKDIR /app
 
 COPY backend/package*.json ./backend/
@@ -18,7 +18,7 @@ RUN npm ci --only=production
 
 COPY backend/ ./
 
-COPY --from=frontend-builder/app/frontend/dist ./public
+COPY --from=frontend-builder /app/frontend/dist ./public
 
 EXPOSE 5000
 
