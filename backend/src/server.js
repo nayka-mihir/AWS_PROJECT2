@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import productsRouter from './routes/products.js';
 import ordersRouter from './routes/orders.js';
 
@@ -8,6 +10,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Middleware
 app.use(cors());
@@ -17,31 +20,25 @@ app.use(express.json());
 app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
 
-// Health Check & Root Endpoint
+// Health Check Endpoint
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
-    service: 'Two-Tier E-Commerce Backend API',
+    service: 'Single-Container E-Commerce App',
     timestamp: new Date().toISOString()
   });
 });
 
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to Two-Tier E-Commerce API Server',
-    endpoints: [
-      'GET /api/products',
-      'GET /api/products/:id',
-      'POST /api/products',
-      'DELETE /api/products/:id',
-      'GET /api/orders',
-      'POST /api/orders',
-      'GET /api/health'
-    ]
-  });
+// Serve Static Frontend Assets (copied into public directory)
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath));
+
+// Fallback: Return index.html for any frontend client routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 Tier 2 Backend Server running on http://localhost:${PORT}`);
+  console.log(`🚀 App running on http://localhost:${PORT}`);
 });
