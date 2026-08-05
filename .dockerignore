@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+npm-debug.log*
+.git
+.gitignore
+*.md
+dist
+**/dist
+.env
+.env.local
+*.env
+.DS_Store
+Thumbs.db
