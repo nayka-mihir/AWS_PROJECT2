@@ -149,8 +149,8 @@ flowchart TD
     P2 --> P3["Phase 3<br/>Deploy Application"]
     P3 --> P4["Phase 4<br/>Verify Live Endpoints"]
 
-    P1 -.-> P1a["Ubuntu 22.04 LTS, t2.micro<br/>Configure Security Group"]
-    P2 -.-> P2a["SSH in, apt update/upgrade<br/>install docker.io + compose"]
+    P1 -.-> P1a["Ubuntu 22.04 or Amazon Linux 2023<br/>t2.micro, Configure Security Group"]
+    P2 -.-> P2a["SSH in, install Docker Engine<br/>+ Docker Compose V2"]
     P3 -.-> P3a["docker run from Docker Hub<br/>-or- git clone + docker compose"]
     P4 -.-> P4a["Check frontend, backend health,<br/>and products API in browser"]
 ```
@@ -158,7 +158,7 @@ flowchart TD
 ### Phase 1: Launch AWS EC2 Instance
 1. Log in to **AWS Management Console** → **EC2** → **Launch Instance**:
    - **Name:** `ecom-app-server`
-   - **AMI:** `Ubuntu 22.04 LTS` (Free Tier Eligible)
+   - **AMI:** `Ubuntu 22.04 LTS` **or** `Amazon Linux 2023` (both Free Tier Eligible)
    - **Instance Type:** `t2.micro`
    - **Key Pair:** Select or create a new key pair (`my-key.pem`).
 2. **Configure Security Group (Inbound Rules):**
@@ -168,20 +168,88 @@ flowchart TD
 | SSH | TCP | `22` | My IP / Anywhere (`0.0.0.0/0`) | Remote Terminal Access |
 | Custom TCP | TCP | `5000` | Anywhere (`0.0.0.0/0`) | Full App (Frontend + API) |
 
+---
+
 ### Phase 2: Connect & Install Docker on EC2
+
+> **Choose the tab that matches the AMI you selected in Phase 1.**
+
+---
+
+#### 🅰️ Option A — Ubuntu 22.04 LTS
+
+**1. Connect via SSH:**
 ```bash
 chmod 400 my-key.pem
 ssh -i my-key.pem ubuntu@<YOUR_EC2_PUBLIC_IP>
 ```
+
+**2. Install Docker & Docker Compose:**
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y docker.io docker-compose-v2
 ```
+
+**3. Give permissions to your user:**
 ```bash
 sudo usermod -aG docker ubuntu
 exit
 ```
-*Reconnect SSH for group permission updates to take effect.*
+
+**4. Reconnect SSH for group permission updates to take effect:**
+```bash
+ssh -i my-key.pem ubuntu@<YOUR_EC2_PUBLIC_IP>
+```
+
+---
+
+#### 🅱️ Option B — Amazon Linux 2023
+
+**1. Connect via SSH (from Windows `cmd` or PowerShell):**
+```cmd
+ssh -i my-key.pem ec2-user@<YOUR_EC2_PUBLIC_IP>
+```
+
+**2. Install Docker Engine:**
+```bash
+sudo yum install -y docker
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+**3. Give permissions to your user:**
+```bash
+sudo usermod -aG docker $USER
+```
+
+**4. Download & Configure Docker Compose V2:**
+
+Amazon Linux does not include Docker Compose in its package manager, so download the official release binary directly:
+```bash
+sudo mkdir -p /usr/libexec/docker/cli-plugins/
+sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/libexec/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+```
+
+**5. Refresh the session & verify:**
+
+Disconnect first:
+```bash
+exit
+```
+
+Reconnect from your Windows `cmd` to pick up the new user permissions:
+```cmd
+ssh -i my-key.pem ec2-user@<YOUR_EC2_PUBLIC_IP>
+```
+
+Verify that both Docker and Compose are working:
+```bash
+docker ps
+docker compose version
+```
+
+---
 
 ### Phase 3: Deploy Application on EC2
 
