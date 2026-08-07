@@ -288,6 +288,10 @@ docker compose up -d
 
 ---
 
+<img width="1894" height="1032" alt="two-tier-web" src="https://github.com/user-attachments/assets/3e8a18c8-5781-4084-9467-46478928309b" />
+
+
+
 ## 📜 License
 
 This project is open-source and available under the [MIT License](LICENSE).
